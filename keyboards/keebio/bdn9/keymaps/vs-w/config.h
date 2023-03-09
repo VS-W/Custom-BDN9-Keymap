@@ -1,0 +1,17 @@
+#pragma once
+
+#define MK_3_SPEED
+#define MK_C_OFFSET_UNMOD 300
+#define MK_C_INTERVAL_UNMOD 5
+#define MK_C_OFFSET_0 4
+#define MK_C_INTERVAL_0 16
+#define MK_C_OFFSET_1 8
+#define MK_C_INTERVAL_1 16
+#define MK_C_OFFSET_2 300
+#define MK_C_INTERVAL_2 5
+
+#define RGB_MATRIX_MAXIMUM_BRIGHTNESS 255
+
+#ifdef RGB_MATRIX_ENABLE
+#    define RGB_MATRIX_KEYPRESSES
+#endif
