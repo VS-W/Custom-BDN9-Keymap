@@ -39,6 +39,7 @@ uint16_t rgb_interval = 200;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
+        // Toggle, change the time between each mouse jiggler action (2 seconds or 10 milliseconds).
         case MJSPEED: {
             if (record->event.pressed) {
                 toggle_speed ^= 1;
@@ -50,6 +51,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
         }
+
+        // Auto-refresher, F5.
         case AUTOF5: {
             if (record->event.pressed) {
                 rgbindex = 255;
@@ -64,6 +67,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
         }
+
+        // Auto-clicker, left mouse button.
         case AUTOLMB: {
             if (record->event.pressed) {
                 rgbindex = 255;
@@ -78,12 +83,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
         }
+
+        // Sets whether to send random mouse movements or force mosue to top-left when running the mouse jiggler macro.
         case MJRNG: {
             if (record->event.pressed) {
                 mouse_jiggle_rng ^= 1;
             }
             return false;
         }
+
+        // Toggle mouse key layer and sets a low backlight level to indicate that layer is active.
         case MLAYER: {
             if (record->event.pressed) {
                 mouse_layer ^= 1;
@@ -97,6 +106,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
         }
+
+        // Toggle mouse speed.
         case MS: {
             if (record->event.pressed) {
                 switch(mss) {
@@ -112,6 +123,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
         }
+
+        // Toggle mouse jiggler on/off. Sets backlight_level and mouse accel speed back to default on disable.
         case MJMACRO: {
             if (record->event.pressed) {
                 rgbindex = 0;
@@ -128,6 +141,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
         }
+
+        // Send alt-tab, hold alt until released.
         case ALT_TAB: {
             if (record->event.pressed) {
                 if (!is_alt_tab_active) {
@@ -146,34 +161,60 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 }
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
-/*
-    | Knob 1: Vol Dn/Up |        | Knob 2: Page Dn/Up    |
-    | Press: Mute       | PrtScr | Press: ALT-TAB Rotary |
-    | Hold: Layer 1     | Up     | Hold: Layer 2         |
-    | Left              | Down   | Right                 |
+/*  
+    Default layer, functions matching the keycaps.
+
+    | Knob 1: Vol Dn/Up |              | Knob 2: Page Dn/Up    |
+    | Press: Mute       | PrtScr       | Press: ALT-TAB Rotary |
+    | Hold: Layer 1     | Up           | Hold: Layer 2         |
+    | Left              | Down         | Right                 |
 */
     [0] = LAYOUT(
         KC_MUTE, KC_PSCR, ALT_TAB,
         MO(1)  , KC_UP  , MO(2),
         KC_LEFT, KC_DOWN, KC_RGHT
     ),
+
+/*  
+    Layer 1, mostly mouse related macros.
+
+    | To MouseKey layer | MouseJiggler | Toggle MJ randomness  |
+    | Held: Layer 1     | X            | Toggle MJ Speed       |
+    | Auto-click LMB    | Y            | Z                     |
+*/
     // Via MO(1)
     [1] = LAYOUT(
         MLAYER , MJMACRO, MJRNG  ,
-        KC_TRNS, AUTOF5 , MJSPEED,
-        AUTOLMB, KC_Z   , KC_W   
+        KC_TRNS, KC_X   , MJSPEED,
+        AUTOLMB, KC_Y   , KC_Z   
     ),
+
+/*  
+    MouseKey layer.
+
+    | Exit MouseKeys    | Change Speed | Press: ALT-TAB Rotary |
+    | Left mouse button | Mouse Up     | Right mouse button    |
+    | Mouse Left        | Mouse Down   | Mouse Right           |
+*/
     // Via MLAYER (toggled)
     [3] = LAYOUT(
         MLAYER , MS     , ALT_TAB,
         KC_BTN1, KC_MS_U, KC_BTN2,
         KC_MS_L, KC_MS_D, KC_MS_R
     ),
+    
+/*  
+    Layer 2, other macros. Mostly unused.
+
+    | Press: Mute       | Auto-F5      | Press: ALT-TAB Rotary |
+    | V                 | W            | Held: Layer 2         |
+    | X                 | Y            | Z                     |
+*/
     // Via MO(2)
     [2] = LAYOUT(
-        KC_MUTE, KC_X   , ALT_TAB,
-        KC_X   , KC_X   , KC_TRNS,
-        KC_Y   , KC_Z   , KC_W   
+        KC_MUTE, AUTOF5 , ALT_TAB,
+        KC_V   , KC_W   , KC_TRNS,
+        KC_X   , KC_Y   , KC_Z   
     ),
 };
 
