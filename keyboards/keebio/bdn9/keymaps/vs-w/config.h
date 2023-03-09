@@ -5,7 +5,7 @@
 #define MK_C_INTERVAL_UNMOD 5
 #define MK_C_OFFSET_0 4
 #define MK_C_INTERVAL_0 16
-#define MK_C_OFFSET_1 8
+#define MK_C_OFFSET_1 10
 #define MK_C_INTERVAL_1 16
 #define MK_C_OFFSET_2 300
 #define MK_C_INTERVAL_2 5
