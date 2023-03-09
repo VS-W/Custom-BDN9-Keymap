@@ -6,7 +6,7 @@ Customized keymap and macros on a rev1 BDN9 macropad.
 
 ![BDN9 Mapping](docs/map.png)
 
-### (for my own reference)
+### Setup / Build / Workflow
 Setup QMK env, assuming the repo is dumped into `~/qmk_firmware`.
 
 From the clone of this repo:
