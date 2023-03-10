@@ -4,6 +4,8 @@ Customized keymap and macros for my personal BDN9 macropad with a Proton C.
 
 Auto-clicker, auto-F5, mouse jiggler, mouse keys, scrolling alt-tab using an encoder.
 
+Still have 8 keys on the top layers available for more functions, currently mapped to single characters.
+
 ![BDN9](docs/bdn9.png)
 
 ![BDN9 Mapping](docs/map.png)
