@@ -12,7 +12,11 @@ enum custom_keycodes {
   MS,
   MLAYER,
   AUTOF5,
+  AUTORNG,
+  AUTOABC,
+  AUTOSPM,
   AUTOLMB,
+  STOPALL,
   ALT_TAB
 };
 
@@ -31,11 +35,20 @@ bool auto_lmb = false;
 int auto_lmb_interval = 300;
 bool auto_f5 = false;
 int auto_f5_interval = 1000;
+bool auto_rng = false;
+bool auto_abc = false;
+bool auto_spam = false;
+int auto_type_interval = 100;
 
 int rgbindex = 0;
 bool reversergb = false;
 uint16_t rgb_timer = false;
 uint16_t rgb_interval = 200;
+
+char letters[26] = "abcdefghijklmnopqrstuvwxyz";
+char cletters[26] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+char numbers[10] = "0123456789";
+char symbols[18] = "~!@#$%^&*_-+=<>,.?";
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
@@ -47,6 +60,71 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     spam_interval = 2000;
                 } else {
                     spam_interval = 10;
+                }
+            }
+            return false;
+        }
+
+        // Stops all macros.
+        case STOPALL: {
+            if (record->event.pressed) {
+                mouse_jiggle_mode = false;
+                mouse_jiggle_rng = false;
+                auto_lmb = false;
+                auto_f5 = false;
+                auto_rng = false;
+                auto_abc = false;
+                auto_spam = false;
+
+                rgbindex = 255;
+                backlight_level(255);
+            }
+            return false;
+        }
+
+        // Auto-RNG, random numbers.
+        case AUTORNG: {
+            if (record->event.pressed) {
+                rgbindex = 255;
+                auto_rng ^= 1;
+                if (auto_rng) {
+                    spam_timer = timer_read();
+                    rgb_timer = timer_read();
+                } else {
+                    rgbindex = 255;
+                    backlight_level(255);
+                }
+            }
+            return false;
+        }
+
+        // Auto-ABC, random characters.
+        case AUTOABC: {
+            if (record->event.pressed) {
+                rgbindex = 255;
+                auto_abc ^= 1;
+                if (auto_abc) {
+                    spam_timer = timer_read();
+                    rgb_timer = timer_read();
+                } else {
+                    rgbindex = 255;
+                    backlight_level(255);
+                }
+            }
+            return false;
+        }
+
+        // Auto-spam, charcters + numbers + shifts.
+        case AUTOSPM: {
+            if (record->event.pressed) {
+                rgbindex = 255;
+                auto_spam ^= 1;
+                if (auto_spam) {
+                    spam_timer = timer_read();
+                    rgb_timer = timer_read();
+                } else {
+                    rgbindex = 255;
+                    backlight_level(255);
                 }
             }
             return false;
@@ -207,89 +285,169 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     Layer 2, other macros. Mostly unused.
 
     | Press: Mute       | Auto-F5      | Press: ALT-TAB Rotary |
-    | V                 | W            | Held: Layer 2         |
-    | X                 | Y            | Z                     |
+    | Auto-RNG          | Auto-Spam    | Held: Layer 2         |
+    | Auto-ABC          | Y            | Stop All Macros       |
 */
     // Via MO(2)
     [2] = LAYOUT(
         KC_MUTE, AUTOF5 , ALT_TAB,
-        KC_V   , KC_W   , KC_TRNS,
-        KC_X   , KC_Y   , KC_Z   
+        AUTORNG, AUTOSPM, KC_TRNS,
+        AUTOABC, KC_Y   , STOPALL
     ),
 };
 
 void matrix_scan_user(void) {
-    if (mouse_jiggle_mode && timer_elapsed(spam_timer) >= spam_interval) {
-        spam_timer = timer_read();
-        if (mouse_jiggle_rng) {
-            switch(rand() % 4) {
-                case 0:
-                    tap_code(KC_MS_UP);
-                    break;
-                case 1:
-                    tap_code(KC_MS_LEFT);
-                    break;
-                case 2:
-                    tap_code(KC_MS_DOWN);
-                    break;
-                case 3:
-                    tap_code(KC_MS_RIGHT);
-                    break;
-            }
-        } else {
-            switch(rand() % 2) {
-                case 0:
-                    tap_code(KC_MS_UP);
-                    break;
-                case 1:
-                    tap_code(KC_MS_LEFT);
-                    break;
+    if (mouse_jiggle_mode) {
+        if (timer_elapsed(spam_timer) >= spam_interval) {
+            spam_timer = timer_read();
+            if (mouse_jiggle_rng) {
+                switch(rand() % 4) {
+                    case 0:
+                        tap_code(KC_MS_UP);
+                        break;
+                    case 1:
+                        tap_code(KC_MS_LEFT);
+                        break;
+                    case 2:
+                        tap_code(KC_MS_DOWN);
+                        break;
+                    case 3:
+                        tap_code(KC_MS_RIGHT);
+                        break;
+                }
+            } else {
+                switch(rand() % 2) {
+                    case 0:
+                        tap_code(KC_MS_UP);
+                        break;
+                    case 1:
+                        tap_code(KC_MS_LEFT);
+                        break;
+                }
             }
         }
-    }
-    if (auto_f5 && timer_elapsed(spam_timer) >= auto_f5_interval) {
-        spam_timer = timer_read();
-        tap_code(KC_F5);
-    }
-    if (auto_f5 && timer_elapsed(rgb_timer) >= (auto_f5_interval / 2)) {
-        rgb_timer = timer_read();
-        if (rgbindex > 0) {
-            rgbindex = 0;
-        } else {
-            rgbindex = 1;
+        if (timer_elapsed(rgb_timer) >= rgb_interval) {
+            rgb_timer = timer_read();
+            if (reversergb) {
+                rgbindex = rgbindex - 1;
+            } else {
+                rgbindex = rgbindex + 1;
+            }
+            if (rgbindex > 7) {
+                rgbindex = 8;
+                reversergb = true;
+            }
+            if (rgbindex < 0) {
+                rgbindex = 0;
+                reversergb = false;
+            }
+            backlight_level(rgbindex);
         }
-        backlight_level(rgbindex);
     }
 
-    if (auto_lmb && timer_elapsed(spam_timer) >= auto_lmb_interval) {
-        spam_timer = timer_read();
-        tap_code(KC_BTN1);
+    if (auto_f5) {
+        if (timer_elapsed(spam_timer) >= auto_f5_interval) {
+            spam_timer = timer_read();
+            tap_code(KC_F5);
+        }
+        if (timer_elapsed(rgb_timer) >= (auto_f5_interval / 2)) {
+            rgb_timer = timer_read();
+            if (rgbindex > 0) {
+                rgbindex = 0;
+            } else {
+                rgbindex = 1;
+            }
+            backlight_level(rgbindex);
+        }
     }
-    if (auto_lmb && timer_elapsed(rgb_timer) >= (auto_lmb_interval / 2)) {
-        rgb_timer = timer_read();
-        if (rgbindex > 0) {
-            rgbindex = 0;
-        } else {
-            rgbindex = 1;
+
+    if (auto_lmb) {
+        if (timer_elapsed(spam_timer) >= auto_lmb_interval) {
+            spam_timer = timer_read();
+            tap_code(KC_BTN1);
         }
-        backlight_level(rgbindex);
+        if (timer_elapsed(rgb_timer) >= (auto_lmb_interval / 2)) {
+            rgb_timer = timer_read();
+            if (rgbindex > 0) {
+                rgbindex = 0;
+            } else {
+                rgbindex = 1;
+            }
+            backlight_level(rgbindex);
+        }
     }
-    if (mouse_jiggle_mode && timer_elapsed(rgb_timer) >= rgb_interval) {
-        rgb_timer = timer_read();
-        if (reversergb) {
-            rgbindex = rgbindex - 1;
-        } else {
-            rgbindex = rgbindex + 1;
+
+    if (auto_spam) {
+        char merge[2];
+        merge[1] = '\0';
+        if (timer_elapsed(spam_timer) >= auto_type_interval) {
+            spam_timer = timer_read();
+            switch(rand() % 4) {
+                case 0:
+                    merge[0] = letters[rand() % 26];
+                    SEND_STRING(merge);
+                    break;
+                case 1:
+                    merge[0] = cletters[rand() % 26];
+                    SEND_STRING(merge);
+                    break;
+                case 2:
+                    merge[0] = numbers[rand() % 10];
+                    SEND_STRING(merge);
+                    break;
+                case 3:
+                    merge[0] = symbols[rand() % 18];
+                    SEND_STRING(merge);
+                    break;
+            }
         }
-        if (rgbindex > 7) {
-            rgbindex = 8;
-            reversergb = true;
+        if (timer_elapsed(rgb_timer) >= 500) {
+            rgb_timer = timer_read();
+            if (rgbindex > 0) {
+                rgbindex = 0;
+            } else {
+                rgbindex = 255;
+            }
+            backlight_level(rgbindex);
         }
-        if (rgbindex < 0) {
-            rgbindex = 0;
-            reversergb = false;
+    }
+
+    if (auto_abc) {
+        char merge[2];
+        merge[1] = '\0';
+        if (timer_elapsed(spam_timer) >= auto_type_interval) {
+            spam_timer = timer_read();
+            merge[0] = letters[rand() % 26];
+            SEND_STRING(merge);
         }
-        backlight_level(rgbindex);
+        if (timer_elapsed(rgb_timer) >= 500) {
+            rgb_timer = timer_read();
+            if (rgbindex > 0) {
+                rgbindex = 0;
+            } else {
+                rgbindex = 255;
+            }
+            backlight_level(rgbindex);
+        }
+    }
+
+    if (auto_rng) {
+        char merge[2];
+        merge[1] = '\0';
+        if (timer_elapsed(spam_timer) >= auto_type_interval) {
+            spam_timer = timer_read();
+            merge[0] = numbers[rand() % 10];
+            SEND_STRING(merge);
+        }
+        if (timer_elapsed(rgb_timer) >= 500) {
+            rgb_timer = timer_read();
+            if (rgbindex > 0) {
+                rgbindex = 0;
+            } else {
+                rgbindex = 255;
+            }
+            backlight_level(rgbindex);
+        }
     }
 }
 
